@@ -3,6 +3,7 @@ var numPlayers = 8;
 function initSoccer()
 {
     console.log(data[0]);
+    maxPasses = 0;
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
 
@@ -10,6 +11,8 @@ function initSoccer()
 
     function drawRotatedRect(x, y, width, height, degrees, paddleColor, text)
     {
+        height = height * 2;
+        width = width * 2;
         ctx.save();
         ctx.beginPath();
         ctx.translate(x+width/2, y+height/2);
@@ -38,7 +41,7 @@ function initSoccer()
     }
 
     currentIndex = 1;
-    zoom = 5;
+    zoom = 18; // was 5
     var leftTeamColor = "red";
     var rightTeamColor = "blue";
     var ballColor = "green";
@@ -51,6 +54,15 @@ function initSoccer()
 
     var leftTeam = [11,12,15,16,19,20,22,23,25,29,30];
     var rightTeam = [41,43,45,46,47,60,61,64,65,72,73];
+    var leftTeamPasses = 0;
+    var rightTeamPasses = 0;
+
+    var rightPosDict = {
+        41: {x: 0, y: 0}, 43: {x: 0, y: 0}, 45: {x: 0, y: 0}, 46: {x: 0, y: 0}, 47: {x: 0, y: 0}, 60: {x: 0, y: 0}, 61: {x: 0, y: 0}, 64: {x: 0, y: 0}, 65: {x: 0, y: 0}, 72: {x: 0, y: 0}, 73: {x: 0, y: 0}
+    };
+    var leftPosDict = {
+        11: {x: 0, y: 0}, 12: {x: 0, y: 0}, 15: {x: 0, y: 0}, 16: {x: 0, y: 0}, 19: {x: 0, y: 0}, 20: {x: 0, y: 0}, 22: {x: 0, y: 0}, 23: {x: 0, y: 0}, 25: {x: 0, y: 0}, 29: {x: 0, y: 0}, 30: {x: 0, y: 0}
+    };
 
     var rightPassDict = {
         41: {}, 43: {}, 45: {}, 46: {}, 47: {}, 60: {}, 61: {}, 64: {}, 65: {}, 72: {}, 73: {}
@@ -130,42 +142,34 @@ function initSoccer()
         41: 0, 43: 0, 45: 0, 46: 0, 47: 0, 60: 0, 61: 0, 64: 0, 65: 0, 72: 0
     };
 
+    console.log(leftPosDict);
+    console.log(rightPosDict);
+
     console.log(leftPassDict);
     console.log(rightPassDict);
     resultsPrinted = false;
 
     function update()
     {
+        // Gap from 29450 to 38000
+        // Skip to 39060
+        // If > 52070
+        // Set to 52070
         if (currentIndex > 29450 && currentIndex < 38000)
         {
             currentIndex = 39060;
         }
-        if (currentIndex > 52070)
+        if (currentIndex > 10000)
         {
             // End
             if (!resultsPrinted)
             {
+                ctx.clearRect(-canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
                 DisplayFindings();
                 resultsPrinted = true;
             }
-            currentIndex = 52070;
+            currentIndex = 10000;
         }
-
-        // console.log(data[currentIndex]['calc']['curBPTeam']);
-        // console.log(curBPTeam);
-        // console.log(data[currentIndex]['calc']['curPass'])
-        // console.log(curPass);
-        // console.log("--------");
-        
-        // if (data[currentIndex]['calc']['curBPTeam'] != curBPTeam)
-        // {
-        //     if (data[currentIndex]['calc']['curPass'] != curPass)
-        //     {
-        //         console.log("Pass to other team!");
-        //         curPass = data[currentIndex]['calc']['curPass'];
-        //     }
-        //     curBPTeam = data[currentIndex]['calc']['curBPTeam'];
-        // }
 
         if (data[currentIndex]['calc']['curBPTeam'] == curBPTeam)
         {
@@ -182,6 +186,24 @@ function initSoccer()
                         if (leftTeam.includes(prevPlayerPos))
                         {
                             leftPassDict[prevPlayerPos][curPlayerPos] += 1;
+                            if (leftPassDict[prevPlayerPos][curPlayerPos] > maxPasses)
+                            {
+                                maxPasses = leftPassDict[prevPlayerPos][curPlayerPos];
+                            }
+                            // Update leftPassDict here for ALL players
+                            for (z = 0; z < leftTeam.length; z++) 
+                            {
+                                number = leftTeam[z]
+                                for (value in data[currentIndex]['data'])
+                                {
+                                    if (data[currentIndex]['data'][value]['id'] == number)
+                                    {
+                                        leftPosDict[number].x = leftPosDict[number].x + data[currentIndex]['data'][value]['x'];
+                                        leftPosDict[number].y = leftPosDict[number].y + data[currentIndex]['data'][value]['y'];
+                                    }
+                                }
+                            }
+                            leftTeamPasses += 1;
                         }
                     }
                 }
@@ -194,6 +216,24 @@ function initSoccer()
                         if (rightTeam.includes(prevPlayerPos))
                         {
                             rightPassDict[prevPlayerPos][curPlayerPos] += 1;
+                            if (rightPassDict[prevPlayerPos][curPlayerPos] > maxPasses)
+                            {
+                                maxPasses = rightPassDict[prevPlayerPos][curPlayerPos];
+                            }
+                            // Update rightPassDict here for ALL players
+                            for (z = 0; z < rightTeam.length; z++) 
+                            {
+                                number = rightTeam[z]
+                                for (value in data[currentIndex]['data'])
+                                {
+                                    if (data[currentIndex]['data'][value]['id'] == number)
+                                    {
+                                        rightPosDict[number].x = rightPosDict[number].x + data[currentIndex]['data'][value]['x'];
+                                        rightPosDict[number].y = rightPosDict[number].y + data[currentIndex]['data'][value]['y'];
+                                    }
+                                }
+                            }
+                            rightTeamPasses += 1;
                         }
 
                     }
@@ -210,50 +250,73 @@ function initSoccer()
 
         var possNum = returnCurrentPos(currentIndex);
         ctx.clearRect(-canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
-        for (i = 0; i < data[currentIndex]['data'].length; i++)
+
+        if (resultsPrinted)
         {
-            var currentColor = "purple";
-            switch (data[currentIndex]['data'][i]['id']) 
+            console.log(maxPasses);
+            for (value in leftPosDict)
             {
-                // Red / Left Team
-                case 11:
-                case 12:
-                case 15:
-                case 16:
-                case 19:
-                case 20:
-                case 22:
-                case 23:
-                case 25:
-                case 29:
-                case 30:
-                    currentColor = leftTeamColor;
-                break;
-                // Right / Blue Team
-                case 41:
-                case 43:
-                case 45:
-                case 46:
-                case 47:
-                case 60:
-                case 61:
-                case 64:
-                case 65:
-                case 72:
-                case 73:
-                    currentColor = rightTeamColor;
-                break;
-                case 5:
-                    currentColor = ballColor
-                break;
-                default:
-                break;
+                for (recipient in leftPassDict[value])
+                {
+                    lineWidth = (leftPassDict[value][recipient]/maxPasses)*5;
+                    ctx.moveTo(leftPosDict[value].x*zoom, leftPosDict[value].y*zoom);
+                    ctx.lineTo((leftPosDict[recipient].x)*zoom, (leftPosDict[recipient].y+1.2)*zoom);
+                    ctx.lineWidth = lineWidth;
+                    ctx.stroke();
+                }
+
+                currentColor = leftTeamColor;
+                drawRotatedRect(leftPosDict[value].x*zoom, leftPosDict[value].y*zoom,10,10,0,currentColor,value);
             }
-            drawRotatedRect(data[currentIndex]['data'][i]['x']*zoom, data[currentIndex]['data'][i]['y']*zoom,10,10,0,currentColor, data[currentIndex]['data'][i]['id']);
-            drawRotatedRect(-400,250,1,1,0,"black","Poss: " + String(possNum));
-            drawRotatedRect(-400,275,1,1,0,"black","Index: " + String(currentIndex));
-            drawRotatedRect(200,250,1,1,0,"black","curPass: " + String(data[currentIndex]['calc']['curPass']));
-            drawRotatedRect(200,275,1,1,0,"black","curBPTeam: " + String(data[currentIndex]['calc']['curBPTeam']));
+
+        }
+        else
+        {
+            for (i = 0; i < data[currentIndex]['data'].length; i++)
+            {
+                var currentColor = "purple";
+                switch (data[currentIndex]['data'][i]['id']) 
+                {
+                    // Red / Left Team
+                    case 11:
+                    case 12:
+                    case 15:
+                    case 16:
+                    case 19:
+                    case 20:
+                    case 22:
+                    case 23:
+                    case 25:
+                    case 29:
+                    case 30:
+                        currentColor = leftTeamColor;
+                    break;
+                    // Right / Blue Team
+                    case 41:
+                    case 43:
+                    case 45:
+                    case 46:
+                    case 47:
+                    case 60:
+                    case 61:
+                    case 64:
+                    case 65:
+                    case 72:
+                    case 73:
+                        currentColor = rightTeamColor;
+                    break;
+                    case 5:
+                        currentColor = ballColor
+                    break;
+                    default:
+                    break;
+                }
+                drawRotatedRect(data[currentIndex]['data'][i]['x']*zoom, data[currentIndex]['data'][i]['y']*zoom,10,10,0,currentColor, data[currentIndex]['data'][i]['id']);
+                drawRotatedRect(-400,250,1,1,0,"black","Poss: " + String(possNum));
+                drawRotatedRect(-400,275,1,1,0,"black","Index: " + String(currentIndex));
+                drawRotatedRect(200,250,1,1,0,"black","curPass: " + String(data[currentIndex]['calc']['curPass']));
+                drawRotatedRect(200,275,1,1,0,"black","curBPTeam: " + String(data[currentIndex]['calc']['curBPTeam']));
+            }
         }
            
             // ctx.beginPath();
@@ -383,7 +446,28 @@ function initSoccer()
                 }
             }
             console.log(i + " inDegree: " + inDegree);
-
         }
+        for (i = 0; i < leftTeam.length; i++)
+        {
+            avgX = leftPosDict[leftTeam[i]].x / leftTeamPasses;
+            avgY = leftPosDict[leftTeam[i]].y / leftTeamPasses;
+
+            console.log(leftTeam[i] + " avgX : " + avgX + " avgY: " + avgY);
+
+            leftPosDict[leftTeam[i]].x = avgX;
+            leftPosDict[leftTeam[i]].y = avgY;
+        }
+        for (i = 0; i < rightTeam.length; i++)
+        {
+            avgX = rightPosDict[rightTeam[i]].x / rightTeamPasses;
+            avgY = rightPosDict[rightTeam[i]].y / rightTeamPasses;
+
+            console.log(rightTeam[i] + " avgX : " + avgX + " avgY: " + avgY);
+
+            rightPosDict[rightTeam[i]].x = avgX;
+            rightPosDict[rightTeam[i]].y = avgY;
+        }
+
+        resultsPrinted = true;
     }
 }
