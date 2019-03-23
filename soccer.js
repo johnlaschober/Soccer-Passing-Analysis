@@ -1,4 +1,5 @@
 var numPlayers = 8;
+var resultColors = ["#e6194b", "#f58231", "#808000", "#bfef45", "#3cb44b", "#42d4f4", "#4363d8", "#911eb4", "#f032e6", "#a9a9a9", "#000000"];
 
 function initSoccer()
 {
@@ -20,9 +21,16 @@ function initSoccer()
         ctx.rect(-width/2, -height/2, width, height);
         ctx.fillStyle=paddleColor;
         ctx.fill();
-        ctx.fillStyle="#000000";
+        if (paddleColor == "#000000")
+        {
+            ctx.fillStyle="#FFFFFF";
+        }
+        else
+        {
+            ctx.fillStyle="#000000";
+        }
         ctx.font = "20px Arial";
-        ctx.fillText(text,0,0);
+        ctx.fillText(text,-9,7);
         ctx.closePath();
         ctx.restore();
     }
@@ -41,7 +49,8 @@ function initSoccer()
     }
 
     currentIndex = 1;
-    zoom = 18; // was 5
+    var zoom = 5; // was 5
+    var resultsZoom = 40;
     var leftTeamColor = "red";
     var rightTeamColor = "blue";
     var ballColor = "green";
@@ -142,11 +151,6 @@ function initSoccer()
         41: 0, 43: 0, 45: 0, 46: 0, 47: 0, 60: 0, 61: 0, 64: 0, 65: 0, 72: 0
     };
 
-    console.log(leftPosDict);
-    console.log(rightPosDict);
-
-    console.log(leftPassDict);
-    console.log(rightPassDict);
     resultsPrinted = false;
 
     function update()
@@ -159,7 +163,7 @@ function initSoccer()
         {
             currentIndex = 39060;
         }
-        if (currentIndex > 10000)
+        if (currentIndex > 50000) // Set to 50000
         {
             // End
             if (!resultsPrinted)
@@ -168,7 +172,7 @@ function initSoccer()
                 DisplayFindings();
                 resultsPrinted = true;
             }
-            currentIndex = 10000;
+            currentIndex = 50000; // Set to 50000
         }
 
         if (data[currentIndex]['calc']['curBPTeam'] == curBPTeam)
@@ -181,7 +185,7 @@ function initSoccer()
                 {
                     if (prevPlayerPos != curPlayerPos)
                     {
-                        console.log(prevPlayerPos + " passed to " + curPlayerPos);
+                        //console.log(prevPlayerPos + " passed to " + curPlayerPos);
 
                         if (leftTeam.includes(prevPlayerPos))
                         {
@@ -211,7 +215,7 @@ function initSoccer()
                 {
                     if (prevPlayerPos != curPlayerPos)
                     {
-                        console.log(prevPlayerPos + " passed to " + curPlayerPos);
+                        //console.log(prevPlayerPos + " passed to " + curPlayerPos);
                        
                         if (rightTeam.includes(prevPlayerPos))
                         {
@@ -253,22 +257,28 @@ function initSoccer()
 
         if (resultsPrinted)
         {
-            console.log(maxPasses);
+            var i = 0;
             for (value in leftPosDict)
             {
                 for (recipient in leftPassDict[value])
                 {
-                    lineWidth = (leftPassDict[value][recipient]/maxPasses)*5;
-                    ctx.moveTo(leftPosDict[value].x*zoom, leftPosDict[value].y*zoom);
-                    ctx.lineTo((leftPosDict[recipient].x)*zoom, (leftPosDict[recipient].y+1.2)*zoom);
+                    ctx.beginPath();
+                    lineWidth = (leftPassDict[value][recipient]/maxPasses)*12;
+                    ctx.moveTo((leftPosDict[value].x)*resultsZoom, (leftPosDict[value].y)*resultsZoom);
+                    ctx.lineTo((leftPosDict[recipient].x)*resultsZoom, (leftPosDict[recipient].y)*resultsZoom);
                     ctx.lineWidth = lineWidth;
+                    ctx.strokeStyle = resultColors[i];
                     ctx.stroke();
                 }
-
-                currentColor = leftTeamColor;
-                drawRotatedRect(leftPosDict[value].x*zoom, leftPosDict[value].y*zoom,10,10,0,currentColor,value);
+                i++
             }
-
+            i = 0;
+            for (value in leftPosDict)
+            {
+                currentColor = resultColors[i];
+                drawRotatedRect(leftPosDict[value].x*resultsZoom, leftPosDict[value].y*resultsZoom,10,10,0,currentColor,value);
+                i++;
+            }
         }
         else
         {
@@ -347,6 +357,14 @@ function initSoccer()
         //         currentIndex--;
         //     }
         // }
+        if (rightPressed)
+        {
+            resultsZoom++;
+        }
+        else if (leftPressed)
+        {
+            resultsZoom--;
+        }
         currentIndex++;
     }
     setInterval(update, 0);
@@ -412,7 +430,7 @@ function initSoccer()
             {
                 outDegree += thisDictionary[key];
             }
-            console.log(i + " outDegree: " + outDegree);
+            console.log(leftTeam[i] + " outDegree: " + outDegree);
         
             inDegree = 0;
             for (j = 0; j < leftTeam.length; j++)
@@ -423,7 +441,7 @@ function initSoccer()
                     inDegree += currentDictionary[leftTeam[i]];
                 }
             }
-            console.log(i + " inDegree: " + inDegree);
+            console.log(leftTeam[i] + " inDegree: " + inDegree);
         }
 
         for (i = 0; i < rightTeam.length; i++)
@@ -434,7 +452,7 @@ function initSoccer()
             {
                 outDegree += thisDictionary[key];
             }
-            console.log(i + " outDegree: " + outDegree);
+            console.log(rightTeam[i] + " outDegree: " + outDegree);
 
             inDegree = 0;
             for (j = 0; j < rightTeam.length; j++)
@@ -445,7 +463,7 @@ function initSoccer()
                     inDegree += currentDictionary[rightTeam[i]];
                 }
             }
-            console.log(i + " inDegree: " + inDegree);
+            console.log(rightTeam[i] + " inDegree: " + inDegree);
         }
         for (i = 0; i < leftTeam.length; i++)
         {
