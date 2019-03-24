@@ -258,14 +258,14 @@ function initSoccer()
         if (resultsPrinted)
         {
             var i = 0;
-            for (value in leftPosDict)
+            for (value in rightPosDict)
             {
-                for (recipient in leftPassDict[value])
+                for (recipient in rightPassDict[value])
                 {
                     ctx.beginPath();
-                    lineWidth = (leftPassDict[value][recipient]/maxPasses)*12;
-                    ctx.moveTo((leftPosDict[value].x)*resultsZoom, (leftPosDict[value].y)*resultsZoom);
-                    ctx.lineTo((leftPosDict[recipient].x)*resultsZoom, (leftPosDict[recipient].y)*resultsZoom);
+                    lineWidth = (rightPassDict[value][recipient]/maxPasses)*12;
+                    ctx.moveTo((rightPosDict[value].x)*resultsZoom, (rightPosDict[value].y)*resultsZoom);
+                    ctx.lineTo((rightPosDict[recipient].x)*resultsZoom, (rightPosDict[recipient].y)*resultsZoom);
                     ctx.lineWidth = lineWidth;
                     ctx.strokeStyle = resultColors[i];
                     ctx.stroke();
@@ -273,10 +273,10 @@ function initSoccer()
                 i++
             }
             i = 0;
-            for (value in leftPosDict)
+            for (value in rightPosDict)
             {
                 currentColor = resultColors[i];
-                drawRotatedRect(leftPosDict[value].x*resultsZoom, leftPosDict[value].y*resultsZoom,10,10,0,currentColor,value);
+                drawRotatedRect(rightPosDict[value].x*resultsZoom, rightPosDict[value].y*resultsZoom,10,10,0,currentColor,value);
                 i++;
             }
         }
