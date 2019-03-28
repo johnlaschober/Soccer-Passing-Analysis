@@ -44,43 +44,41 @@ for playerId, recipientArray in leftPasses.items() :
         if numPassesToRecipient > 0 :
             adjacencyMap[playerId].append(recipientId)
 
-distanceMap = {}
+
 teamMembers = [11,12,15,16,19,20,22,23,25,29,30]
-S = []
-V = teamMembers
-
-
-sourceNode = 11
-S.append(sourceNode)
-V.remove(sourceNode)
-
-distanceMap[sourceNode] = 0
 
 def distBetween(node1, node2) :   
     return math.sqrt(pow(avgPos[node2][0] - avgPos[node1][0],2) + pow(avgPos[node2][1] - avgPos[node1][1],2))
 
+for playerId in teamMembers :
+    S = []
+    V = teamMembers.copy()
+    sourceNode = playerId
+    S.append(sourceNode)
+    V.remove(sourceNode)
+    distanceMap = {}
+    distanceMap[sourceNode] = 0
+    while len(V) != 0 :
+            minDist = sys.maxsize
+            foundNode = False
+            for outerNode in V: 
+                    for innerNode in S: 
+                            if outerNode in adjacencyMap[innerNode]:
+                                    if distanceMap[innerNode] + distBetween(outerNode, innerNode) < minDist:
+                                            minDist = distanceMap[innerNode] + distBetween(outerNode, innerNode)
+                                            foundNode = True
+                    if foundNode :
+                            distanceMap[outerNode] = minDist
+                            S.append(outerNode)
+                            V.remove(outerNode)
+                            foundNode = outerNode
+                            break
+      
 
-while len(V) != 0 :
-        minDist = sys.maxsize
-        foundNode = False
-        for outerNode in V: 
-                for innerNode in S: 
-                        if outerNode in adjacencyMap[innerNode]:
-                                if distanceMap[innerNode] + distBetween(outerNode, innerNode) < minDist:
-                                        minDist = distanceMap[innerNode] + distBetween(outerNode, innerNode)
-                                        foundNode = True
-                if foundNode :
-                        distanceMap[outerNode] = minDist
-                        S.append(outerNode)
-                        V.remove(outerNode)
-                        foundNode = outerNode
-                        break
-  
+    endSum = 0
+    for i in S :
+            if i in distanceMap.keys() :
+                    endSum = endSum + distanceMap[i]
 
-endSum = 0
-for i in S :
-        if i in distanceMap.keys() :
-                endSum = endSum + distanceMap[i]
-
-print("Closeness for ", sourceNode)
-print(1/endSum)
+    print("Closeness for ", sourceNode)
+    print(1/endSum)
